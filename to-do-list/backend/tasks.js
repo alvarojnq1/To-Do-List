@@ -2,11 +2,10 @@ import express from "express";
 import pool from "./db.js";
 import { authMiddleware } from "./auth.js";
 
-const app = express();
-app.use(express.json());
+const router = express.Router();
 
 // rota para pegar todas as tasks do usuario logado
-app.get("/tasks", authMiddleware, async (req, res) => {
+router.get("/", authMiddleware, async (req, res) => {
   try {
     const userId = req.user.id;
     const [rows] = await pool.query("SELECT * FROM tasks WHERE user_id = ?", [
@@ -20,22 +19,33 @@ app.get("/tasks", authMiddleware, async (req, res) => {
 });
 
 // rota para atualizar a task
-app.put("/tasks/:id", authMiddleware, async (req, res) => {
+router.put("/:id", authMiddleware, async (req, res) => {
   try {
-    const { id } = req.params;
     const { descricao, realizada, prioridade } = req.body;
 
-    // só atualiza se a task pertence ao usuário logado
-    const [result] = await pool.query(
-      "UPDATE tasks SET descricao = ?, realizada = ?, prioridade = ? WHERE id = ? AND user_id = ?",
-      [descricao, realizada, prioridade, id, req.user.id]
+    // Buscar a task atual
+    const [rows] = await pool.query(
+      "SELECT * FROM tasks WHERE id = ? AND user_id = ?",
+      [req.params.id, req.user.id]
     );
 
-    if (result.affectedRows === 0) {
+    if (rows.length === 0) {
       return res
         .status(404)
         .json({ error: "Task não encontrada ou não pertence a você" });
     }
+
+    const task = rows[0];
+
+    // Atualiza só os campos que vierem no body
+    const newDescricao = descricao ?? task.descricao;
+    const newRealizada = realizada ?? task.realizada;
+    const newPrioridade = prioridade ?? task.prioridade;
+
+    await pool.query(
+      "UPDATE tasks SET descricao = ?, realizada = ?, prioridade = ? WHERE id = ? AND user_id = ?",
+      [newDescricao, newRealizada, newPrioridade, req.params.id, req.user.id]
+    );
 
     res.json({ message: "Tarefa atualizada com sucesso" });
   } catch (err) {
@@ -45,7 +55,7 @@ app.put("/tasks/:id", authMiddleware, async (req, res) => {
 });
 
 // rota para criar uma nova task
-app.post("/tasks", authMiddleware, async (req, res) => {
+router.post("/", authMiddleware, async (req, res) => {
   try {
     const { descricao, prioridade } = req.body;
     const userId = req.user.id;
@@ -69,7 +79,7 @@ app.post("/tasks", authMiddleware, async (req, res) => {
 });
 
 // rota para deletar uma task
-app.delete("/tasks/:id", authMiddleware, async (req, res) => {
+router.delete("/:id", authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -90,3 +100,5 @@ app.delete("/tasks/:id", authMiddleware, async (req, res) => {
     res.status(500).json({ error: "Erro ao deletar a tarefa" });
   }
 });
+
+export default router;
