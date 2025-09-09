@@ -1,22 +1,18 @@
 import express from "express";
-import pool from "./db.js";
+import cors from "cors";
+import dotenv from "dotenv";
+import authRoutes from "./auth.js";
+import taskRoutes from "./tasks.js";
 
+dotenv.config();
 const app = express();
 app.use(express.json());
 
-// Rota de teste (conexão com banco)
-app.get("/ping", async (req, res) => {
-  try {
-    const [rows] = await pool.query("SELECT 1 + 1 AS result");
-    res.json({ db: "ok", result: rows[0].result });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Erro na conexão com o banco" });
-  }
-});
+// CORS
+app.use(cors({ origin: "http://localhost:5173", credentials: true }));
 
-// Inicia servidor
-const PORT = 3000;
-app.listen(PORT, () => {
-  console.log(`Servidor rodando em http://localhost:${PORT}`);
-});
+// Rotas
+app.use("/", authRoutes);
+app.use("/tasks", taskRoutes);
+
+app.listen(3000, () => console.log("Backend rodando na porta 3000"));

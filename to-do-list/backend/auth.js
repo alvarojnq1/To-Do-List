@@ -3,6 +3,9 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import pool from "./db.js";
 
+import dotenv from "dotenv";
+dotenv.config();
+
 const app = express();
 app.use(express.json());
 
@@ -94,3 +97,4 @@ function authMiddleware(req, res, next) {
 }
 
 export { authMiddleware };
+export default app;
