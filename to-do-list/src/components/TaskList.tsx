@@ -2,8 +2,12 @@ import { useEffect, useState } from "react";
 import type { Task } from "../types/types";
 import { getTasks, updateTask, deleteTask } from "../api/api";
 
-export const TaskList = () => {
-  const [tasks, setTasks] = useState<Task[]>([]);
+interface TaskListProps {
+  tasks: Task[];
+  setTasks: React.Dispatch<React.SetStateAction<Task[]>>;
+}
+
+export const TaskList = ({ tasks, setTasks }: TaskListProps) => {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"all" | "active" | "completed">("all");
 
@@ -26,7 +30,6 @@ export const TaskList = () => {
   const toggleTask = async (task: Task) => {
     try {
       await updateTask(task.id, { realizada: !task.realizada });
-      // Atualiza localmente em vez de recarregar tudo
       setTasks(
         tasks.map((t) =>
           t.id === task.id ? { ...t, realizada: !t.realizada } : t
@@ -34,7 +37,6 @@ export const TaskList = () => {
       );
     } catch (error) {
       console.error("Erro ao atualizar tarefa:", error);
-      // Recarrega se der erro
       fetchTasks();
     }
   };
@@ -42,11 +44,9 @@ export const TaskList = () => {
   const removeTask = async (id: number) => {
     try {
       await deleteTask(id);
-      // Remove localmente em vez de recarregar tudo
       setTasks(tasks.filter((task) => task.id !== id));
     } catch (error) {
       console.error("Erro ao deletar tarefa:", error);
-      // Recarrega se der erro
       fetchTasks();
     }
   };
@@ -55,11 +55,9 @@ export const TaskList = () => {
     try {
       const completedTasks = tasks.filter((task) => task.realizada);
       await Promise.all(completedTasks.map((task) => deleteTask(task.id)));
-      // Remove localmente as tarefas concluídas
       setTasks(tasks.filter((task) => !task.realizada));
     } catch (error) {
       console.error("Erro ao limpar tarefas concluídas:", error);
-      // Recarrega se der erro
       fetchTasks();
     }
   };
@@ -114,7 +112,6 @@ export const TaskList = () => {
 
   return (
     <div className="bg-white rounded-lg shadow">
-      {/* Header com filtros e estatísticas */}
       <div className="px-6 py-4 border-b border-gray-200">
         <div className="flex justify-between items-center">
           <h2 className="text-lg font-medium text-gray-900">
@@ -155,7 +152,6 @@ export const TaskList = () => {
         </div>
       </div>
 
-      {/* Lista de tarefas */}
       <ul className="divide-y divide-gray-200">
         {filteredTasks.length === 0 ? (
           <li className="px-6 py-8 text-center">
@@ -263,7 +259,6 @@ export const TaskList = () => {
         )}
       </ul>
 
-      {/* Footer com ações */}
       {tasks.some((task) => task.realizada) && (
         <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
           <div className="flex justify-between items-center">

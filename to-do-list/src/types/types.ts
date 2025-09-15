@@ -10,5 +10,4 @@ export interface Task {
   realizada: boolean;
   prioridade: number;
   user_id: number;
-  dataCriacao: string;
 }
