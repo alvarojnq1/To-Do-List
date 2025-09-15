@@ -2,11 +2,11 @@ import { useState } from "react";
 import { createTask } from "../api/api";
 import type { Task } from "../types/types";
 
-export const TaskForm = ({
-  onCreate,
-}: {
+interface TaskFormProps {
   onCreate: (newTask: Task) => void;
-}) => {
+}
+
+export const TaskForm = ({ onCreate }: TaskFormProps) => {
   const [descricao, setDescricao] = useState("");
   const [prioridade, setPrioridade] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
@@ -18,7 +18,7 @@ export const TaskForm = ({
     setIsLoading(true);
     try {
       const res = await createTask(descricao, prioridade);
-      onCreate(res.data);
+      onCreate(res.data); // Chama a função passada via props
       setDescricao("");
       setPrioridade(1);
     } catch (error) {
